@@ -10,6 +10,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from sklearn.model_selection import train_test_split
+
 
 def import_data(pth):
     '''
@@ -17,6 +19,7 @@ def import_data(pth):
 
     input:
             pth: a path to the csv
+    
     output:
             df: pandas dataframe
     '''
@@ -27,10 +30,12 @@ def import_data(pth):
 
 def perform_eda(df, output_pth):
     '''
-    perform eda on df and save figures to images folder
+    Perform eda on df and save figures to images folder
+    
     input:
             df: pandas dataframe
             output_pth: string of path to image folder
+    
     output:
             None
     '''
@@ -83,6 +88,74 @@ def perform_eda(df, output_pth):
     plt.close()
 
 
+def encoder_helper(df, category_lst, response):
+    '''
+    helper function to turn each categorical column into a new column with
+    propotion of churn for each category - associated with cell 15 from the notebook
+
+    input:
+            df: pandas dataframe
+            category_lst: list of columns that contain categorical features
+            response: string of response name [optional argument that could be used for naming variables or index y column]
+
+    output:
+            df: pandas dataframe with new columns for
+    '''
+    for col in category_lst:
+        new_lst = []
+        new_group = df.groupby(col).mean()[response]
+
+        for val in df[col]:
+            new_lst.append(new_group.loc[val])
+
+        new_col_name = col + '_' + response
+        df[new_col_name] = new_lst
+
+    return df
+
+
+def perform_feature_engineering(df, response):
+    '''
+    Perform feature_engineering and return train and test data subsets.
+    input:
+              df: pandas dataframe
+              response: string of response name [optional argument that could be used for naming variables or index y column]
+
+    output:
+              X_train: X training data
+              X_test: X testing data
+              y_train: y training data
+              y_test: y testing data
+    '''
+    cat_columns = [
+        'Gender',
+        'Education_Level',
+        'Marital_Status',
+        'Income_Category',
+        'Card_Category'
+    ]
+
+    keep_cols = [
+        'Customer_Age', 'Dependent_count', 'Months_on_book',
+        'Total_Relationship_Count', 'Months_Inactive_12_mon',
+        'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
+        'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
+        'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
+        'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn', 
+        'Income_Category_Churn', 'Card_Category_Churn'
+    ]
+
+    y = df['Churn']
+    X = pd.DataFrame()
+    df = encoder_helper(df, cat_columns, response)
+    X[keep_cols] = df[keep_cols]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42)
+
+    return X_train, X_test, y_train, y_test
+
+
 if __name__ == "__main__":
     
     path_to_csv = "./data/bank_data.csv"
@@ -93,3 +166,10 @@ if __name__ == "__main__":
     
     # exploratory data analysis
     perform_eda(data, path_to_eda_imgs)
+
+    # split data into training and testing subset
+    X_train, X_test, y_train, y_test = perform_feature_engineering(
+        data, 'Churn')
+
+
+
