@@ -43,13 +43,13 @@ def test_eda(perform_eda, df):
     '''
     test perform_eda function
     '''
-    path_to_eda_imgs = './images/eda/'
-    perform_eda(df, path_to_eda_imgs)
+    PATH_TO_EDA_IMGS = './images/eda/'
+    perform_eda(df, PATH_TO_EDA_IMGS)
 
     try:
         img_list = [
             os.path.basename(file_pth) for file_pth in glob.glob(
-                path_to_eda_imgs + "*png")]
+                PATH_TO_EDA_IMGS + "*png")]
         actual = len(img_list)
         expected = 7
         assert actual == expected
@@ -110,15 +110,15 @@ def test_train_models(train_models, X_train, X_test, y_train, y_test):
     '''
     test train_models function
     '''
-    path_to_models = './models/'
-    path_to_results = './images/results/'
+    PATH_TO_MODELS = './models/'
+    PATH_TO_RESULTS = './images/results/'
 
     train_models(X_train, X_test, y_train, y_test)
 
     try:
         model_lst = [
             os.path.basename(file_pth) for file_pth in glob.glob(
-                path_to_models + '*pkl')]
+                PATH_TO_MODELS + '*pkl')]
         actual = len(model_lst)
         expected = 2
         assert actual == expected
@@ -130,7 +130,7 @@ def test_train_models(train_models, X_train, X_test, y_train, y_test):
     try:
         img_lst = [
             os.path.basename(file_pth) for file_pth in glob.glob(
-                path_to_results + '*png')]
+                PATH_TO_RESULTS + '*png')]
         actual = len(img_lst)
         expected = 4
         assert actual == expected
