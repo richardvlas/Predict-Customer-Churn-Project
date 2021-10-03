@@ -1,5 +1,5 @@
 '''
-This module contains functions to identify credit card customers that are 
+This module contains functions to identify credit card customers that are
 most likely to churn.
 
 author: Richard Vlas
@@ -27,7 +27,7 @@ def import_data(pth):
 
     input:
             pth: a path to the csv
-    
+
     output:
             df: pandas dataframe
     '''
@@ -39,18 +39,18 @@ def import_data(pth):
 def perform_eda(df, output_pth):
     '''
     Perform eda on df and save figures to images folder
-    
+
     input:
             df: pandas dataframe
             output_pth: string of path to image folder
-    
+
     output:
             None
     '''
     y_column = "Churn"
 
     cat_columns = [
-        'Marital_Status', 
+        'Marital_Status',
         'Education_Level'
     ]
 
@@ -70,7 +70,7 @@ def perform_eda(df, output_pth):
         plt.title(f"Bar Chart of {col}")
         plt.savefig(os.path.join(output_pth, col), bbox_inches="tight")
         plt.close()
-    
+
     for col in quant_columns:
         plt.figure(figsize=(20, 10))
         plt.hist(df[col])
@@ -78,10 +78,10 @@ def perform_eda(df, output_pth):
         plt.title(f"Histogram of {col}")
         plt.savefig(os.path.join(output_pth, col), bbox_inches="tight")
         plt.close()
-    
+
     df[y_column] = df['Attrition_Flag'].apply(
         lambda val: 0 if val == "Existing Customer" else 1
-        )
+    )
 
     plt.figure(figsize=(20, 10))
     plt.hist(df[y_column])
@@ -149,7 +149,7 @@ def perform_feature_engineering(df, response):
         'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
         'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
         'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
-        'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn', 
+        'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn',
         'Income_Category_Churn', 'Card_Category_Churn'
     ]
 
@@ -173,7 +173,7 @@ def classification_report_image(y_train,
     '''
     Produces classification report for training and testing results and stores report as image
     in images folder
-    
+
     input:
             y_train: training response values
             y_test:  test response values
@@ -187,20 +187,28 @@ def classification_report_image(y_train,
     '''
     plt.figure()
     plt.rc('figure', figsize=(5, 5))
-    plt.text(0.01, 1.25, str('Random Forest Train'), {'fontsize': 10}, fontproperties = 'monospace')
-    plt.text(0.01, 0.05, str(classification_report(y_test, y_test_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
-    plt.text(0.01, 0.6, str('Random Forest Test'), {'fontsize': 10}, fontproperties = 'monospace')
-    plt.text(0.01, 0.7, str(classification_report(y_train, y_train_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+    plt.text(0.01, 1.25, str('Random Forest Train'), {
+             'fontsize': 10}, fontproperties='monospace')
+    plt.text(0.01, 0.05, str(classification_report(y_test, y_test_preds_rf)), {
+             'fontsize': 10}, fontproperties='monospace')  # approach improved by OP -> monospace!
+    plt.text(0.01, 0.6, str('Random Forest Test'), {
+             'fontsize': 10}, fontproperties='monospace')
+    plt.text(0.01, 0.7, str(classification_report(y_train, y_train_preds_rf)), {
+             'fontsize': 10}, fontproperties='monospace')  # approach improved by OP -> monospace!
     plt.axis('off')
     plt.savefig('./images/results/rfc_results.png', bbox_inches="tight")
     plt.close()
 
     plt.figure()
     plt.rc('figure', figsize=(5, 5))
-    plt.text(0.01, 1.25, str('Logistic Regression Train'), {'fontsize': 10}, fontproperties = 'monospace')
-    plt.text(0.01, 0.05, str(classification_report(y_train, y_train_preds_lr)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
-    plt.text(0.01, 0.6, str('Logistic Regression Test'), {'fontsize': 10}, fontproperties = 'monospace')
-    plt.text(0.01, 0.7, str(classification_report(y_test, y_test_preds_lr)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+    plt.text(0.01, 1.25, str('Logistic Regression Train'),
+             {'fontsize': 10}, fontproperties='monospace')
+    plt.text(0.01, 0.05, str(classification_report(y_train, y_train_preds_lr)), {
+             'fontsize': 10}, fontproperties='monospace')  # approach improved by OP -> monospace!
+    plt.text(0.01, 0.6, str('Logistic Regression Test'), {
+             'fontsize': 10}, fontproperties='monospace')
+    plt.text(0.01, 0.7, str(classification_report(y_test, y_test_preds_lr)), {
+             'fontsize': 10}, fontproperties='monospace')  # approach improved by OP -> monospace!
     plt.axis('off')
     plt.savefig('./images/results/lrc_results.png', bbox_inches="tight")
     plt.close()
@@ -209,7 +217,7 @@ def classification_report_image(y_train,
 def feature_importance_plot(model, X_data, output_pth):
     '''
     creates and stores the feature importances in output_pth
-    
+
     input:
             model: model object containing feature_importances_
             X_data: pandas dataframe of X values
@@ -220,15 +228,15 @@ def feature_importance_plot(model, X_data, output_pth):
     '''
     # Calculate feature importances
     importances = model.feature_importances_
-    
+
     # Sort feature importances in descending order
     indices = np.argsort(importances)[::-1]
-    
+
     # Rearrange feature names so they match the sorted feature importances
     names = [X_data.columns[i] for i in indices]
-    
+
     # Create plot
-    plt.figure(figsize=(20,5))
+    plt.figure(figsize=(20, 5))
 
     # Create plot title
     plt.title("Feature Importance")
@@ -262,11 +270,11 @@ def train_models(X_train, X_test, y_train, y_test):
     lrc = LogisticRegression()
 
     # set grid search parameters
-    param_grid = { 
+    param_grid = {
         'n_estimators': [200, 500],
         'max_features': ['auto', 'sqrt'],
-        'max_depth' : [4,5,100],
-        'criterion' :['gini', 'entropy']
+        'max_depth': [4, 5, 100],
+        'criterion': ['gini', 'entropy']
     }
 
     # train models
@@ -277,7 +285,7 @@ def train_models(X_train, X_test, y_train, y_test):
     # predict using rfc model
     y_train_preds_rf = cv_rfc.best_estimator_.predict(X_train)
     y_test_preds_rf = cv_rfc.best_estimator_.predict(X_test)
-    
+
     # predict using lrc model
     y_train_preds_lr = lrc.predict(X_train)
     y_test_preds_lr = lrc.predict(X_test)
@@ -287,10 +295,10 @@ def train_models(X_train, X_test, y_train, y_test):
     plt.figure(figsize=(15, 8))
     ax = plt.gca()
     rfc_disp = plot_roc_curve(
-        cv_rfc.best_estimator_, 
-        X_test, 
-        y_test, 
-        ax=ax, 
+        cv_rfc.best_estimator_,
+        X_test,
+        y_test,
+        ax=ax,
         alpha=0.8)
     lrc_plot.plot(ax=ax, alpha=0.8)
     plt.savefig("./images/results/roc_curve.png", bbox_inches="tight")
@@ -311,25 +319,25 @@ def train_models(X_train, X_test, y_train, y_test):
 
     # plot and store feature importances
     feature_importance_plot(
-        cv_rfc.best_estimator_, 
-        X_train, 
+        cv_rfc.best_estimator_,
+        X_train,
         "./images/results/feature_importances.png")
 
 
 if __name__ == "__main__":
-    
+
     PATH_TO_CSV = "./data/bank_data.csv"
     PATH_TO_EDA_IMGS = "./images/eda/"
-    
+
     # import the data
     data = import_data(PATH_TO_CSV)
-    
+
     # exploratory data analysis
     perform_eda(data, PATH_TO_EDA_IMGS)
 
     # split data into training and testing subset
-    X_train, X_test, y_train, y_test = perform_feature_engineering(
+    X_TRAIN, X_TEST, Y_TRAIN, Y_TEST = perform_feature_engineering(
         data, 'Churn')
 
     # Train and store models as well as results
-    train_models(X_train, X_test, y_train, y_test)
+    train_models(X_TRAIN, X_TEST, Y_TRAIN, Y_TEST)
