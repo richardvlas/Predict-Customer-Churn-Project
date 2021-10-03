@@ -75,13 +75,35 @@ def test_encoder_helper(encoder_helper, df):
             assert col in df.columns
         logging.info("Testing encoder_helper function: SUCCESS")
     except AssertionError as err:
-        logging.error("Testing encoder_helper function: The encoder_helper function did contain the transformed features")
+        logging.error("Testing encoder_helper function: The dataframe did not contain the transformed features")
         raise err
 
     return df
 
 
+def test_perform_feature_engineering(perform_feature_engineering, df):
+    '''
+	test perform_feature_engineering
+	'''
+    X_train, X_test, y_train, y_test = perform_feature_engineering(df, 'Churn')
+
+    try:
+        assert X_train.shape[0] > 0
+        assert X_test.shape[0] > 0
+        assert y_train.shape[0] > 0
+        assert y_test.shape[0] > 0
+        logging.info("Testing perform_feature_engineering function: SUCCESS")
+    except AssertionError as err:
+        logging.error("Testing perform_feature_engineering function: The train and test data objects appear to not contain data")
+        raise err
+
+    return X_train, X_test, y_train, y_test
+
+
 if __name__ == "__main__":
     data = test_import(cl.import_data)
     test_eda(cl.perform_eda, data)
-    data_df = test_encoder_helper(cl.encoder_helper, data)
+    data = test_encoder_helper(cl.encoder_helper, data)
+    X_train, X_test, y_train, y_test = test_perform_feature_engineering(
+        cl.perform_feature_engineering, data)
+
