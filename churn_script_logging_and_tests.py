@@ -83,8 +83,8 @@ def test_encoder_helper(encoder_helper, df):
 
 def test_perform_feature_engineering(perform_feature_engineering, df):
     '''
-	test perform_feature_engineering
-	'''
+    test perform_feature_engineering
+    '''
     X_train, X_test, y_train, y_test = perform_feature_engineering(df, 'Churn')
 
     try:
@@ -100,10 +100,39 @@ def test_perform_feature_engineering(perform_feature_engineering, df):
     return X_train, X_test, y_train, y_test
 
 
+def test_train_models(train_models, X_train, X_test, y_train, y_test):
+    '''
+    test train_models function
+    '''
+    path_to_models = './models/'
+    path_to_results = './images/results/'
+    
+    #train_models(X_train, X_test, y_train, y_test)
+
+    try:
+        model_lst = [os.path.basename(file_pth) for file_pth in glob.glob(path_to_models + '*pkl')]
+        actual = len(model_lst)
+        expected = 2
+        assert actual == expected
+    except AssertionError as err:
+        logging.error("Testing train_models function: The function did not create correct number of models")
+        raise err
+
+    try:
+        img_lst = [os.path.basename(file_pth) for file_pth in glob.glob(path_to_results + '*png')]
+        actual = len(img_lst)
+        expected = 4
+        assert actual == expected
+        logging.info("Testing train_models function: SUCCESS")
+    except AssertionError as err:
+        logging.error("Testing train_models function: The function did not create correct number of images")
+        raise err
+
+
 if __name__ == "__main__":
     data = test_import(cl.import_data)
     test_eda(cl.perform_eda, data)
     data = test_encoder_helper(cl.encoder_helper, data)
     X_train, X_test, y_train, y_test = test_perform_feature_engineering(
         cl.perform_feature_engineering, data)
-
+    test_train_models(cl.train_models, X_train, X_test, y_train, y_test)
