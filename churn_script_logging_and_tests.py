@@ -56,6 +56,32 @@ def test_eda(perform_eda, df):
 		raise err
 
 
+def test_encoder_helper(encoder_helper, df):
+    '''
+    test test_encoder_helper function
+    '''
+    cat_columns = [
+        'Gender',
+        'Education_Level',
+        'Marital_Status',
+        'Income_Category',
+        'Card_Category'
+    ]
+
+    df = encoder_helper(df, cat_columns, 'Churn')
+
+    try:
+        for col in cat_columns:
+            assert col in df.columns
+        logging.info("Testing encoder_helper function: SUCCESS")
+    except AssertionError as err:
+        logging.error("Testing encoder_helper function: The encoder_helper function did contain the transformed features")
+        raise err
+
+    return df
+
+
 if __name__ == "__main__":
     data = test_import(cl.import_data)
     test_eda(cl.perform_eda, data)
+    data_df = test_encoder_helper(cl.encoder_helper, data)
