@@ -29,4 +29,18 @@ python churn_script_logging_and_tests.py
 ```
 
 ## Code formatting
-Pylint scores the file and informs of any non-consistent 
+Pylint scores the files and informs of any code that deviates from PEP8 guidelines. To score the project files, run the code below in the terminal:
+
+```
+pylint churn_library.py
+pylint churn_script_logging_and_tests.py
+```
+
+To assist with meeting PEP8 guidelines, use autopep8 via the command line commands below:
+
+```
+autopep8 --in-place --aggressive --aggressive churn_script_logging_and_tests.py
+autopep8 --in-place --aggressive --aggressive churn_library.py
+```
+
+
