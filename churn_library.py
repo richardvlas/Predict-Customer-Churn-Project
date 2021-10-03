@@ -6,11 +6,19 @@ author: Richard Vlas
 date: October 2021
 '''
 import os
+import joblib
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.model_selection import train_test_split
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+
+from sklearn.metrics import plot_roc_curve, classification_report
 
 
 def import_data(pth):
@@ -156,20 +164,172 @@ def perform_feature_engineering(df, response):
     return X_train, X_test, y_train, y_test
 
 
+def classification_report_image(y_train,
+                                y_test,
+                                y_train_preds_lr,
+                                y_train_preds_rf,
+                                y_test_preds_lr,
+                                y_test_preds_rf):
+    '''
+    Produces classification report for training and testing results and stores report as image
+    in images folder
+    
+    input:
+            y_train: training response values
+            y_test:  test response values
+            y_train_preds_lr: training predictions from logistic regression
+            y_train_preds_rf: training predictions from random forest
+            y_test_preds_lr: test predictions from logistic regression
+            y_test_preds_rf: test predictions from random forest
+
+    output:
+            None
+    '''
+    plt.figure()
+    plt.rc('figure', figsize=(5, 5))
+    plt.text(0.01, 1.25, str('Random Forest Train'), {'fontsize': 10}, fontproperties = 'monospace')
+    plt.text(0.01, 0.05, str(classification_report(y_test, y_test_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+    plt.text(0.01, 0.6, str('Random Forest Test'), {'fontsize': 10}, fontproperties = 'monospace')
+    plt.text(0.01, 0.7, str(classification_report(y_train, y_train_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+    plt.axis('off')
+    plt.savefig('./images/results/rfc_results.png', bbox_inches="tight")
+    plt.close()
+
+    plt.figure()
+    plt.rc('figure', figsize=(5, 5))
+    plt.text(0.01, 1.25, str('Logistic Regression Train'), {'fontsize': 10}, fontproperties = 'monospace')
+    plt.text(0.01, 0.05, str(classification_report(y_train, y_train_preds_lr)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+    plt.text(0.01, 0.6, str('Logistic Regression Test'), {'fontsize': 10}, fontproperties = 'monospace')
+    plt.text(0.01, 0.7, str(classification_report(y_test, y_test_preds_lr)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+    plt.axis('off')
+    plt.savefig('./images/results/lrc_results.png', bbox_inches="tight")
+    plt.close()
+
+
+def feature_importance_plot(model, X_data, output_pth):
+    '''
+    creates and stores the feature importances in output_pth
+    
+    input:
+            model: model object containing feature_importances_
+            X_data: pandas dataframe of X values
+            output_pth: path to store the figure
+
+    output:
+            None
+    '''
+    # Calculate feature importances
+    importances = model.feature_importances_
+    
+    # Sort feature importances in descending order
+    indices = np.argsort(importances)[::-1]
+    
+    # Rearrange feature names so they match the sorted feature importances
+    names = [X_data.columns[i] for i in indices]
+    
+    # Create plot
+    plt.figure(figsize=(20,5))
+
+    # Create plot title
+    plt.title("Feature Importance")
+    plt.ylabel('Importance')
+
+    # Add bars
+    plt.bar(range(X_data.shape[1]), importances[indices])
+
+    # Add feature names as x-axis labels
+    plt.xticks(range(X_data.shape[1]), names, rotation=90)
+
+    # Store figure
+    plt.savefig(output_pth, bbox_inches="tight")
+
+    plt.close()
+
+
+def train_models(X_train, X_test, y_train, y_test):
+    '''
+    train, store model results: images + scores, and store models
+    input:
+              X_train: X training data
+              X_test: X testing data
+              y_train: y training data
+              y_test: y testing data
+    output:
+              None
+    '''
+    # instantiate models
+    rfc = RandomForestClassifier(random_state=42)
+    lrc = LogisticRegression()
+
+    # set grid search parameters
+    param_grid = { 
+        'n_estimators': [200, 500],
+        'max_features': ['auto', 'sqrt'],
+        'max_depth' : [4,5,100],
+        'criterion' :['gini', 'entropy']
+    }
+
+    # train models
+    cv_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
+    cv_rfc.fit(X_train, y_train)
+    lrc.fit(X_train, y_train)
+
+    # predict using rfc model
+    y_train_preds_rf = cv_rfc.best_estimator_.predict(X_train)
+    y_test_preds_rf = cv_rfc.best_estimator_.predict(X_test)
+    
+    # predict using lrc model
+    y_train_preds_lr = lrc.predict(X_train)
+    y_test_preds_lr = lrc.predict(X_test)
+
+    # plot and store roc curves
+    lrc_plot = plot_roc_curve(lrc, X_test, y_test)
+    plt.figure(figsize=(15, 8))
+    ax = plt.gca()
+    rfc_disp = plot_roc_curve(
+        cv_rfc.best_estimator_, 
+        X_test, 
+        y_test, 
+        ax=ax, 
+        alpha=0.8)
+    lrc_plot.plot(ax=ax, alpha=0.8)
+    plt.savefig("./images/results/roc_curve.png", bbox_inches="tight")
+    plt.close()
+
+    # save best model
+    joblib.dump(cv_rfc.best_estimator_, './models/rfc_model.pkl')
+    joblib.dump(lrc, './models/logistic_model.pkl')
+
+    # store model evaluation metrics
+    classification_report_image(
+        y_train,
+        y_test,
+        y_train_preds_lr,
+        y_train_preds_rf,
+        y_test_preds_lr,
+        y_test_preds_rf)
+
+    # plot and store feature importances
+    feature_importance_plot(
+        cv_rfc.best_estimator_, 
+        X_train, 
+        "./images/results/feature_importances.png")
+
+
 if __name__ == "__main__":
     
-    path_to_csv = "./data/bank_data.csv"
-    path_to_eda_imgs = "./images/eda/"
+    PATH_TO_CSV = "./data/bank_data.csv"
+    PATH_TO_EDA_IMGS = "./images/eda/"
     
     # import the data
-    data = import_data(path_to_csv)
+    data = import_data(PATH_TO_CSV)
     
     # exploratory data analysis
-    perform_eda(data, path_to_eda_imgs)
+    perform_eda(data, PATH_TO_EDA_IMGS)
 
     # split data into training and testing subset
     X_train, X_test, y_train, y_test = perform_feature_engineering(
         data, 'Churn')
 
-
-
+    # Train and store models as well as results
+    train_models(X_train, X_test, y_train, y_test)
